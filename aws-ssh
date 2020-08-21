@@ -18,6 +18,10 @@ do
             shift # past argument
             shift # past value
         ;;
+        -h|--help)
+            echo "$0: Specify --region to provide a valid AWS region and --profile to specify a proper AWS profile"
+            exit 0
+        ;;
         *)    # unknown option
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
