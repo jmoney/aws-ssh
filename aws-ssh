@@ -30,17 +30,24 @@ do
             shift # past argument
             shift # past value
         ;;
+        --remote-host)
+            REMOTE_HOST="$2"
+            shift # past argument
+            shift # past value
+        ;;        
     esac
 done
 
 PARAMS=$(jq -n \
+  --arg host "${REMOTE_HOST}" \
   --arg port "${REMOTE_PORT}" \
   --arg local "${LOCAL_PORT}" \
   '{
+    host: [$host],
     portNumber: [$port],
     localPortNumber: [$local]
   }')
 
-aws --profile ${PROFILE} --region ${REGION} ssm start-session --target ${INSTANCE_ID} --document-name AWS-StartPortForwardingSession --parameters "${PARAMS}"
+aws --profile ${PROFILE} --region ${REGION} ssm start-session --target ${INSTANCE_ID}   --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters "${PARAMS}"
 
 
