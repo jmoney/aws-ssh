@@ -1,8 +1,5 @@
 #!/bin/bash
 
-REGION="us-east-1"
-PROFILE="dev-poweruser"
-POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -18,19 +15,32 @@ do
             shift # past argument
             shift # past value
         ;;
-        -h|--help)
-            echo "$0: Specify --region to provide a valid AWS region and --profile to specify a proper AWS profile"
-            exit 0
-        ;;
-        *)    # unknown option
-            POSITIONAL+=("$1") # save it in an array for later
+        --instance-id)
+            INSTANCE_ID="$2"
             shift # past argument
+            shift # past value
+        ;;
+        --local-port)
+            LOCAL_PORT="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --remote-port)
+            REMOTE_PORT="$2"
+            shift # past argument
+            shift # past value
         ;;
     esac
 done
 
-ssh -o "User=ec2-user" \
-    -o "ProxyCommand=aws --region ${REGION} --profile ${PROFILE} ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p" \
-    -o "StrictHostKeyChecking=no" \
-    ${POSITIONAL[@]}
+PARAMS=$(jq -n \
+  --arg port "${REMOTE_PORT}" \
+  --arg local "${LOCAL_PORT}" \
+  '{
+    portNumber: [$port],
+    localPortNumber: [$local]
+  }')
+
+aws --profile ${PROFILE} --region ${REGION} ssm start-session --target ${INSTANCE_ID} --document-name AWS-StartPortForwardingSession --parameters "${PARAMS}"
+
 
